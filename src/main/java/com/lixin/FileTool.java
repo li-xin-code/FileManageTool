@@ -31,17 +31,16 @@ public final class FileTool {
         if (sourceFile.getAbsolutePath().equals(targetFilePath)) {
             return;
         }
-        File newFile = new File(targetFilePath);
-        File newParentFile = newFile.getParentFile();
-        if (!newParentFile.exists()) {
-            if (!newParentFile.mkdirs()) {
-                logger.error("creat dir fail: {}", newParentFile.getAbsolutePath());
-            }
-        }
+
         Path sourcePath = sourceFile.toPath();
         Path targetPath = FileSystems.getDefault().getPath(targetFilePath);
-
-        if (check(sourcePath, targetPath)) {
+        File targetDir = targetPath.getParent().toFile();
+        if (!targetDir.exists()) {
+            if (!targetDir.mkdirs()) {
+                logger.error("creat dir fail: {}", targetDir.getAbsolutePath());
+            }
+        }
+        if (check(sourcePath, targetPath.getParent())) {
             return;
         }
         try {
