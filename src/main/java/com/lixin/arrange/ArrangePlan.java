@@ -24,6 +24,10 @@ public interface ArrangePlan {
 
     ArrangePlan GROUP = (paths, rootPath) -> {
         Map<Path, String> map = new HashMap<>(paths.size());
+        List<Path> inRootDir = paths.stream().filter(path -> path.getParent().equals(rootPath))
+                .collect(Collectors.toList());
+        inRootDir.forEach(path -> map.put(path,path.getFileName().toString()));
+        paths.removeAll(inRootDir);
         Map<Path, List<Path>> group = paths.stream().collect(Collectors.groupingBy(Path::getParent));
         for (Path g : group.keySet()) {
             List<Path> list = group.get(g);
@@ -39,7 +43,7 @@ public interface ArrangePlan {
                     String errorMsg = String.format("异常路径：rootPath: %s ,filePath: %s", rootPath, first);
                     throw new RuntimeException(errorMsg);
                 }
-                String groupName = Optional.of(rootPath.relativize(first).getName(1))
+                String groupName = Optional.of(rootPath.relativize(first).getName(0))
                         .map(Path::toString).orElseThrow(() -> {
                             String errorMsg = String.format("异常路径：rootPath: %s ,filePath: %s", rootPath, first);
                             return new RuntimeException(errorMsg);

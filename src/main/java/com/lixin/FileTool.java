@@ -37,25 +37,26 @@ public final class FileTool {
         File targetDir = targetPath.getParent().toFile();
         if (!targetDir.exists()) {
             if (!targetDir.mkdirs()) {
-                logger.error("creat dir fail: {}", targetDir.getAbsolutePath());
+                throw new RuntimeException("creat dir fail: " + targetDir.getAbsolutePath());
             }
         }
         if (check(sourcePath, targetPath.getParent())) {
             return;
         }
         try {
-            Files.move(sourcePath, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
+            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
             logger.info("success {} move to {}", sourcePath, targetPath);
         } catch (IOException e) {
             logger.error("fail：{} move to {}", sourcePath, targetPath);
             logger.error("fail： ", e);
+            throw new RuntimeException(e);
         }
     }
 
     private static boolean check(Path sourcePath, Path targetPath) {
         try {
             if (Objects.equals(Files.getFileStore(sourcePath), Files.getFileStore(targetPath))) {
-                return true;
+                return false;
             } else {
                 // 获取目标地址的可用空间
                 File targetFile = targetPath.toFile();
@@ -69,6 +70,7 @@ public final class FileTool {
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
+            throw new RuntimeException(e);
         }
         return false;
     }
