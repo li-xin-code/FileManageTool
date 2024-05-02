@@ -26,9 +26,10 @@ public final class FileTool {
     public static void move(File sourceFile, String targetFilePath) {
         Objects.requireNonNull(sourceFile);
         if (!sourceFile.exists()) {
-            return;
+            throw new RuntimeException("文件不存在：" + sourceFile.getPath());
         }
         if (sourceFile.getAbsolutePath().equals(targetFilePath)) {
+            logger.info("相同地址不需要移动，{} to {}", sourceFile.getAbsolutePath(), targetFilePath);
             return;
         }
 
@@ -40,11 +41,21 @@ public final class FileTool {
                 throw new RuntimeException("creat dir fail: " + targetDir.getAbsolutePath());
             }
         }
-        if (check(sourcePath, targetPath.getParent())) {
-            return;
-        }
+        check(sourcePath, targetPath.getParent());
         try {
-            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            if (Files.exists(targetPath)) {
+                int counter = 1;
+                String fileName = targetPath.getFileName().toString();
+                String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+                String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
+
+                while (Files.exists(targetPath)) {
+                    String newFileName = baseName + "(" + counter + ")." + extension;
+                    targetPath = targetPath.resolveSibling(newFileName);
+                    counter++;
+                }
+            }
+            Files.move(sourcePath, targetPath);
             logger.info("success {} move to {}", sourcePath, targetPath);
         } catch (IOException e) {
             logger.error("fail：{} move to {}", sourcePath, targetPath);
@@ -53,26 +64,22 @@ public final class FileTool {
         }
     }
 
-    private static boolean check(Path sourcePath, Path targetPath) {
+    private static void check(Path sourcePath, Path targetPath) {
         try {
-            if (Objects.equals(Files.getFileStore(sourcePath), Files.getFileStore(targetPath))) {
-                return false;
-            } else {
+            if (!Objects.equals(Files.getFileStore(sourcePath), Files.getFileStore(targetPath))) {
                 // 获取目标地址的可用空间
                 File targetFile = targetPath.toFile();
                 long availableSpace = targetFile.getFreeSpace();
                 // 获取源文件的大小
                 long sourceSize = sourcePath.toFile().length();
                 if (availableSpace < sourceSize) {
-                    logger.error("目标地址空间不足");
-                    return true;
+                    throw new RuntimeException("目标地址空间不足");
                 }
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
-        return false;
     }
 
     public static String standardizedDir(String dir) {
@@ -138,6 +145,34 @@ public final class FileTool {
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
+        }
+    }
+
+    public static void removeEmptyFolders(String directory) {
+        Path path = Paths.get(directory);
+
+        try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(path)) {
+            for (Path file : dirStream) {
+                if (Files.isDirectory(file)) {
+                    // 递归调用自身检查子目录
+                    removeEmptyFolders(file.toString());
+                    if (isEmptyDirectory(file)) {
+                        // 删除空文件夹
+                        Files.delete(file);
+                        logger.info("Deleted empty folder: " + file);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean isEmptyDirectory(Path directory) throws IOException {
+        try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory)) {
+            // 判断目录是否为空
+            return !dirStream.iterator().hasNext();
         }
     }
 }
