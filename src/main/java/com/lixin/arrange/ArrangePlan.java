@@ -1,12 +1,9 @@
 package com.lixin.arrange;
 
-import com.lixin.FileTool;
-
 import java.io.File;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 制定整理计划
@@ -19,16 +16,36 @@ public interface ArrangePlan {
     /**
      * 输出文件整理后应在目录地址
      *
-     * @param files ...
-     * @return java.util.Map<java.io.File, java.lang.String>
+     * @param paths    ...
+     * @param rootPath 整理目录
+     * @return ...
      **/
-    Map<Path, String> arrange(List<Path> files);
+    Map<Path, String> arrange(Collection<Path> paths, Path rootPath);
 
-    ArrangePlan GROUP = files -> {
-        Map<Path, String> map = new HashMap<>(files.size());
-        for (Path path : files) {
-            String parent = FileTool.getParentName(path);
-            map.put(path, parent + File.separator + path.getFileName());
+    ArrangePlan GROUP = (paths, rootPath) -> {
+        Map<Path, String> map = new HashMap<>(paths.size());
+        Map<Path, List<Path>> group = paths.stream().collect(Collectors.groupingBy(Path::getParent));
+        for (Path g : group.keySet()) {
+            List<Path> list = group.get(g);
+            if (list.size() == 1) {
+                list.stream().findFirst().ifPresent(path ->
+                        map.put(path, path.getFileName().toString())
+                );
+            }
+            if (list.size() > 1) {
+                Path first = list.stream().findFirst()
+                        .orElseThrow(() -> new NullPointerException("has not element."));
+                if (!first.startsWith(rootPath)) {
+                    String errorMsg = String.format("异常路径：rootPath: %s ,filePath: %s", rootPath, first);
+                    throw new RuntimeException(errorMsg);
+                }
+                String groupName = Optional.of(rootPath.relativize(first).getName(1))
+                        .map(Path::toString).orElseThrow(() -> {
+                            String errorMsg = String.format("异常路径：rootPath: %s ,filePath: %s", rootPath, first);
+                            return new RuntimeException(errorMsg);
+                        });
+                list.forEach(path -> map.put(path, groupName + File.separator + path.getFileName()));
+            }
         }
         return map;
     };

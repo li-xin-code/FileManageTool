@@ -27,9 +27,10 @@ public abstract class AbstractFileArranger implements FileArranger {
         if (!file.exists() || file.isFile()) {
             return Collections.emptyMap();
         }
-        Set<Path> allFile = getAllFile(file.toPath());
+        Path fromDirPath = file.toPath();
+        Set<Path> allFile = getAllFile(fromDirPath);
         List<Path> select = selector.select(allFile);
-        return plan.arrange(select);
+        return plan.arrange(select, fromDirPath);
     }
 
     protected Set<Path> getAllFile(Path path) {
