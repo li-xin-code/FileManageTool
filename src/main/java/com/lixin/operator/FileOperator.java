@@ -3,9 +3,9 @@ package com.lixin.operator;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lixin.FileTool;
 import com.lixin.arrange.FileArranger;
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
