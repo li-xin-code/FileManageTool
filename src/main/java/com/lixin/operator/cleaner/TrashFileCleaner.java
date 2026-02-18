@@ -1,10 +1,10 @@
 package com.lixin.operator.cleaner;
 
-import com.apple.eio.FileManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.lang.reflect.Method;
 
 /**
  * @author lixin
@@ -19,7 +19,9 @@ public class TrashFileCleaner implements FileCleaner {
         try {
             if (os.startsWith("mac os")) {
                 // macOS: 移动到废纸篓
-                FileManager.moveToTrash(new File(directory));
+                Class<?> fileMgr = Class.forName("com.apple.eio.FileManager");
+                Method moveToTrash = fileMgr.getDeclaredMethod("moveToTrash", File.class);
+                moveToTrash.invoke(null, new File(directory));
             } else if (os.contains("windows")) {
                 // Windows: 移动到回收站 使用jna 删除目录
                 RecycleBinDeleteTools.moveToRecycleBin(directory);
