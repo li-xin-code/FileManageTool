@@ -43,8 +43,8 @@ public abstract class AbstractFileArranger implements FileArranger {
         return visitor.getPaths();
     }
 
+    @Getter
     private static class FileVisitor extends SimpleFileVisitor<Path> {
-        @Getter
         private final Set<Path> paths;
 
         public FileVisitor() {

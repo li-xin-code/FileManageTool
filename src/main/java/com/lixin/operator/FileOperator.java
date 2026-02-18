@@ -3,9 +3,12 @@ package com.lixin.operator;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lixin.FileTool;
 import com.lixin.arrange.FileArranger;
-import com.lixin.progress.Progress;
-import com.lixin.progress.ProgressPrintMonitor;
-import com.lixin.progress.SimpleProgress;
+import com.lixin.operator.cleaner.DelFileCleaner;
+import com.lixin.operator.cleaner.FileCleaner;
+import com.lixin.operator.cleaner.TrashFileCleaner;
+import com.lixin.operator.progress.Progress;
+import com.lixin.operator.progress.ProgressPrintMonitor;
+import com.lixin.operator.progress.SimpleProgress;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +32,8 @@ public class FileOperator {
     private static final Logger logger = LoggerFactory.getLogger(FileOperator.class);
     private FileArranger arranger;
     private final ExecutorService threadPool;
-    private boolean isPrintProgress = true;
+    private boolean printProgress = true;
+    private boolean softDel = true;
 
     public FileOperator(FileArranger arranger, ExecutorService threadPool) {
         this.arranger = arranger;
@@ -63,7 +67,7 @@ public class FileOperator {
         Map<String, List<Path>> group = map.keySet().stream().collect(Collectors.groupingBy(FileTool::getParentName));
         CountDownLatch latch = new CountDownLatch(map.size());
         Progress progress = new SimpleProgress(map.size());
-        if (isPrintProgress) {
+        if (printProgress) {
             progress = new ProgressPrintMonitor(progress);
         }
         final Progress finalProgress = progress;
@@ -87,7 +91,8 @@ public class FileOperator {
                 .map(Path::getParent)
                 .map(Path::toString)
                 .collect(Collectors.toSet());
-        FileTool.recursionRemove(parentDirs);
+        FileCleaner cleaner = softDel ? new TrashFileCleaner() : new DelFileCleaner();
+        parentDirs.forEach(cleaner::clean);
         return progress;
     }
 }

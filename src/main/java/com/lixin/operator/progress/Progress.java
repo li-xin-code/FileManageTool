@@ -1,4 +1,4 @@
-package com.lixin.progress;
+package com.lixin.operator.progress;
 
 /**
  * @author lixin
@@ -32,6 +32,7 @@ public interface Progress {
      *
      * @return 添加后的已完成
      */
+    @SuppressWarnings("UnusedReturnValue")
     default int increment() {
         return increment(1);
     }

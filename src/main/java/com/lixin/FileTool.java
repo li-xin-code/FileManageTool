@@ -120,6 +120,51 @@ public final class FileTool {
         dirs.forEach(FileTool::recursionRemove);
     }
 
+    /**
+     * 递归移动目录下所有文件到指定目录
+     */
+    public static void recursionMove(String sourceDir, String targetDir) throws RuntimeException {
+        Path sourcePath = Paths.get(sourceDir);
+        if (!Files.exists(sourcePath)) {
+            return;
+        }
+        Path targetPath = Paths.get(targetDir);
+        if (!Files.exists(targetPath)) {
+            try {
+                Files.createDirectories(targetPath);
+            } catch (IOException e) {
+                logger.error("ex fail：{} create fail", targetPath);
+                throw new RuntimeException(e);
+            }
+            if (!Files.exists(targetPath)){
+                logger.error("fail：{} create fail", targetPath);
+                throw new RuntimeException("create dir fail: " + targetPath);
+            }
+        }
+        try {
+            Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    Path targetDirPath = targetPath.resolve(sourcePath.relativize(dir));
+                    if (!Files.exists(targetDirPath)) {
+                        Files.createDirectories(targetDirPath);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    Path targetFilePath = targetPath.resolve(sourcePath.relativize(file));
+                    move(file.toFile(), targetFilePath.toString());
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            logger.error("recursion move fail：{} move to {}", sourcePath, targetPath);
+            logger.error(e.getMessage(), e);
+        }
+    }
+
     private static final SimpleFileVisitor<Path> DELETE_VISITOR = new SimpleFileVisitor<Path>() {
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -135,7 +180,6 @@ public final class FileTool {
             return FileVisitResult.CONTINUE;
         }
     };
-
     public static void recursionRemove(String directoryPath) {
         // 删除目录及其子目录和文件
         try {
@@ -149,7 +193,7 @@ public final class FileTool {
     }
 
     public static void removeEmptyFolders(String directory) {
-        Path path = Paths.get(directory);
+        Path path = FileSystems.getDefault().getPath(directory);
 
         try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(path)) {
             for (Path file : dirStream) {
@@ -159,7 +203,7 @@ public final class FileTool {
                     if (isEmptyDirectory(file)) {
                         // 删除空文件夹
                         Files.delete(file);
-                        logger.info("Deleted empty folder: " + file);
+                        logger.info("Deleted empty folder: {}", file);
                     }
                 }
             }

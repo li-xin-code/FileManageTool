@@ -1,4 +1,4 @@
-package com.lixin.progress;
+package com.lixin.operator.progress;
 
 import com.lixin.tools.ConsoleProgressBar;
 
