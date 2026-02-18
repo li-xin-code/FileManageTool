@@ -1,4 +1,4 @@
-package com.lixin.operator;
+package com.lixin.progress;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Data
 @RequiredArgsConstructor
-public class Progress {
+public class SimpleProgress implements Progress {
     /**
      * 总量
      */
@@ -22,4 +22,19 @@ public class Progress {
      * 已完成
      */
     private final AtomicInteger complete = new AtomicInteger(0);
+
+    @Override
+    public int getTotal() {
+        return total;
+    }
+
+    @Override
+    public int getComplete() {
+        return complete.get();
+    }
+
+    @Override
+    public int increment(int increment) {
+        return complete.addAndGet(increment);
+    }
 }

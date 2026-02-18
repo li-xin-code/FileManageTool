@@ -3,6 +3,9 @@ package com.lixin.operator;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lixin.FileTool;
 import com.lixin.arrange.FileArranger;
+import com.lixin.progress.Progress;
+import com.lixin.progress.ProgressPrintMonitor;
+import com.lixin.progress.SimpleProgress;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +29,7 @@ public class FileOperator {
     private static final Logger logger = LoggerFactory.getLogger(FileOperator.class);
     private FileArranger arranger;
     private final ExecutorService threadPool;
+    private boolean isPrintProgress = true;
 
     public FileOperator(FileArranger arranger, ExecutorService threadPool) {
         this.arranger = arranger;
@@ -53,11 +57,16 @@ public class FileOperator {
                 threadFactory);
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public Progress move(String fromDir, String toDir) {
         Map<Path, String> map = arranger.arrange(fromDir);
         Map<String, List<Path>> group = map.keySet().stream().collect(Collectors.groupingBy(FileTool::getParentName));
         CountDownLatch latch = new CountDownLatch(map.size());
-        Progress progress = new Progress(map.size());
+        Progress progress = new SimpleProgress(map.size());
+        if (isPrintProgress) {
+            progress = new ProgressPrintMonitor(progress);
+        }
+        final Progress finalProgress = progress;
         group.values().forEach(list -> list.forEach(file -> {
             String newPath = toDir + File.separator + map.get(file);
             threadPool.submit(() -> {
@@ -65,7 +74,7 @@ public class FileOperator {
                     FileTool.move(file.toFile(), newPath);
                 } finally {
                     latch.countDown();
-                    progress.getComplete().incrementAndGet();
+                    finalProgress.increment();
                 }
             });
         }));
