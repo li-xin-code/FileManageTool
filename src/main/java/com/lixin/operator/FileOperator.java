@@ -34,6 +34,7 @@ public class FileOperator {
     private final ExecutorService threadPool;
     private boolean printProgress = true;
     private boolean softDel = true;
+    private boolean clearAfterMove = true;
 
     public FileOperator(FileArranger arranger, ExecutorService threadPool) {
         this.arranger = arranger;
@@ -87,12 +88,14 @@ public class FileOperator {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        Set<String> parentDirs = map.keySet().stream()
-                .map(Path::getParent)
-                .map(Path::toString)
-                .collect(Collectors.toSet());
-        FileCleaner cleaner = softDel ? new TrashFileCleaner() : new DelFileCleaner();
-        parentDirs.forEach(cleaner::clean);
+        if (clearAfterMove) {
+            Set<String> parentDirs = map.keySet().stream()
+                    .map(Path::getParent)
+                    .map(Path::toString)
+                    .collect(Collectors.toSet());
+            FileCleaner cleaner = softDel ? new TrashFileCleaner() : new DelFileCleaner();
+            parentDirs.forEach(cleaner::clean);
+        }
         return progress;
     }
 }
