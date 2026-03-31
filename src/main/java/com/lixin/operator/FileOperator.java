@@ -32,8 +32,17 @@ public class FileOperator {
     private static final Logger logger = LoggerFactory.getLogger(FileOperator.class);
     private FileArranger arranger;
     private final ExecutorService threadPool;
+    /**
+     * 是否打印进度
+     */
     private boolean printProgress = true;
+    /**
+     * 移动完成后是否使用软删除
+     */
     private boolean softDel = true;
+    /**
+     * 移动完成后是否删除源目录
+     */
     private boolean clearAfterMove = true;
 
     public FileOperator(FileArranger arranger, ExecutorService threadPool) {
@@ -65,7 +74,13 @@ public class FileOperator {
     @SuppressWarnings("UnusedReturnValue")
     public Progress move(String fromDir, String toDir) {
         Map<Path, String> map = arranger.arrange(fromDir);
-        Map<String, List<Path>> group = map.keySet().stream().collect(Collectors.groupingBy(FileTool::getParentName));
+        Map<String, List<Path>> group = map.keySet().stream()
+                .collect(Collectors.groupingBy(FileTool::getParentName));
+        /*
+        todo 检查每组文件 的修改时间和文件大小
+         按照修改时间排序 控制移动文件大小
+         获取目标目录磁盘剩余空间
+         */
         CountDownLatch latch = new CountDownLatch(map.size());
         Progress progress = new SimpleProgress(map.size());
         if (printProgress) {

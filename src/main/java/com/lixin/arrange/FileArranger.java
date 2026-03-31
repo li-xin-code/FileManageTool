@@ -17,7 +17,7 @@ public interface FileArranger {
      * @param fromDir  原目录
      * @param selector 文件选择器
      * @param plan     文件整理策略
-     * @return ...
+     * @return 路径: 新路径
      */
     Map<Path, String> arrange(String fromDir, FileSelector selector, ArrangePlan plan);
 
