@@ -1,7 +1,11 @@
 package com.lixin;
 
 import com.lixin.command.FileMoveCommand;
+import org.apache.logging.log4j.core.LoggerContext;
 import picocli.CommandLine;
+
+import java.io.File;
+import java.net.URL;
 
 /**
  * @author lixin

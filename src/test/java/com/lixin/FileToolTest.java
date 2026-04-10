@@ -10,6 +10,6 @@ class FileToolTest {
 
     @Test
     void removeEmptyFolders() {
-        FileTool.removeEmptyFolders("");
+        FileTool.removeEmptyFolders("G:\\collection");
     }
 }

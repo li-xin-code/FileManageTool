@@ -15,4 +15,9 @@ class TrashFileCleanerTest {
         TrashFileCleaner cleaner = new TrashFileCleaner();
         cleaner.clean("/Users/lixin/Downloads/test");
     }
+    @Test
+    void cleanWin() {
+        TrashFileCleaner cleaner = new TrashFileCleaner();
+        cleaner.clean("D:\\i4Tools7\\");
+    }
 }
