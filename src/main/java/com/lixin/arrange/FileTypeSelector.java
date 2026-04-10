@@ -20,7 +20,10 @@ public class FileTypeSelector implements FileSelector {
         Set<String> types = new HashSet<>(Arrays.asList(typeArray));
         return files.stream().filter(path -> {
             String type = FileTool.getFileType(path.toString());
-            return types.contains(type);
+            // 判断文件大小是否为空
+            boolean isNotEmptyFile = Optional.of(path.toFile())
+                    .filter(file -> file.length() > 0).isPresent();
+            return isNotEmptyFile && types.contains(type);
         }).collect(Collectors.toList());
     }
 }
